@@ -1,7 +1,4 @@
 import { Animation } from './Animation';
-import { Background } from './Background';
-import { Canvas } from './Canvas';
-import { initKeypressHandling } from './handle-keypresses';
 import { Screen } from './Screen';
 
 // document.addEventListener('click', () => {
@@ -9,8 +6,5 @@ import { Screen } from './Screen';
 //   audio.play();
 // });
 
-Canvas.getInstance();
 Screen.init();
-initKeypressHandling();
-Animation.addAnimation('init-bg', Background.init);
 Animation.animate();

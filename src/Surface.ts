@@ -1,5 +1,8 @@
 import { Canvas } from './Canvas';
 
+const canvas = Canvas.getInstance();
+
 export class Surface {
-  public static floor = Canvas.getInstance().height - 55;
+  public static readonly playerForwardLimit = canvas.width / 2;
+  public static readonly floor = canvas.height - 55;
 }

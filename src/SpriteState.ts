@@ -1,14 +1,14 @@
-export class ScreenProperties {
+export class SpriteState {
   /** The current frame of the sprite sheet. */
   public currentFrame = 0;
   /** Where the element is on the canvas. */
   public currentPos = { x: 0, y: 0 };
 
-  public constructor(screenProps?: ScreenProperties) {
-    if (screenProps) this.copy(screenProps);
+  public constructor(spriteState?: SpriteState) {
+    if (spriteState) this.copy(spriteState);
   }
 
-  public copy(screenProps: ScreenProperties) {
+  public copy(screenProps: SpriteState) {
     this.currentFrame = screenProps.currentFrame;
     this.currentPos = {...screenProps.currentPos};
   }

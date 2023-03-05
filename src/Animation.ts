@@ -1,6 +1,5 @@
 import { Canvas } from './Canvas';
 import { ISprite } from './ISprite';
-import { Screen } from './Screen';
 
 export type AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => ISprite;
 
@@ -9,21 +8,29 @@ export class Animation {
   private static _gameFrame = 0;
   private static _isAnimating = false;
 
-  private static _gameLoop: AnimationFn[] = [];
+  // private static _gameLoop: AnimationFn[] = [];
   private static _keys: string[] = [];
+
+  public static _loops = [
+    [] as AnimationFn[],
+    [] as AnimationFn[],
+  ]
 
   public static get gameFrame() { return Animation._gameFrame }
 
-  public static addAnimation(key: string, animationFn: AnimationFn) {
+  public static addAnimation(key: string, animationFn: AnimationFn, layer?: 0 | 1) {
     if (!Animation._keys.includes(key)) {
-      const glIdx = (Animation._gameLoop.push(animationFn) - 1)
-      const keyIdx = (Animation._keys.push(key) - 1);
-
-      return () => {
-        Animation._keys.splice(keyIdx, 1);
-        Animation._gameLoop.splice(glIdx, 1);
-      };
+      Animation._loops[layer || 1].push(animationFn);
+      Animation._keys.push(key);
     }
+
+    return () => {
+      console.log('remove', key);
+      const keyIdx = Animation._keys.findIndex((ky) => ky === key)
+      const glIdx = Animation._loops[layer || 1].findIndex((anim) => anim === animationFn);
+      Animation._keys.splice(keyIdx, 1);
+      Animation._loops[layer || 1].splice(glIdx, 1);
+    };
   };
 
   public static animate() {
@@ -45,7 +52,8 @@ export class Animation {
 
     canvas.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    Animation._gameLoop.forEach((anim) => anim(canvas.ctx, Animation._gameFrame));
+    Animation._loops[0].forEach((anim) => anim(canvas.ctx, Animation._gameFrame));
+    Animation._loops[1].forEach((anim) => anim(canvas.ctx, Animation._gameFrame));
 
     Animation._gameFrame++;
     requestAnimationFrame(Animation._animate);

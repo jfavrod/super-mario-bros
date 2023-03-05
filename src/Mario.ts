@@ -1,6 +1,6 @@
 import { AnimationFn } from './Animation';
 import { Observable } from './Observable';
-import { ScreenProperties } from './ScreenProperties';
+import { SpriteState } from './SpriteState';
 import { Surface } from './Surface';
 
 type MarioSprite = {
@@ -22,9 +22,10 @@ export class Mario {
   /** Which direction Mario is facing. */
   private static _direction: 'left' | 'right' = 'right';
   private static _lag = 5;
-  private static _locationObs = new Observable<ScreenProperties>();
-  private static _prevScreenProps = new ScreenProperties();
-  private static _screenProps = new ScreenProperties();
+  private static _locationObs = new Observable<SpriteState>();
+  private static _stopObs = new Observable<void>();
+  private static _prevScreenProps = new SpriteState();
+  private static _spriteState = new SpriteState();
 
   private static _spriteMap = {
     backward: {
@@ -46,130 +47,17 @@ export class Mario {
     power: 'sm',
   };
 
-  public static get screenProps(): ScreenProperties { return new ScreenProperties(Mario._screenProps); }
+  public static get screenProps(): SpriteState { return new SpriteState(Mario._spriteState); }
 
-  public static addLocationObserver(obs: (screenProps: ScreenProperties) => unknown) {
+  public static addLocationObserver(obs: (screenProps: SpriteState) => unknown) {
     return Mario._locationObs.addObserver(obs)
   }
 
-  public static runBackward: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
-    const sprite = Mario.getSprite();
-    const { frames, startY } = Mario._spriteMap.backward;
+  public static addStopObserver(obs: (data: void) => unknown) {
+    return Mario._stopObs.addObserver(obs);
+  }
 
-    if (Mario._state.action === 'run-backward') {
-      const spriteSheetX = frames[Mario._screenProps.currentFrame] * sprite.width;
-      const spriteSheetY = startY;
-      const destX = Mario._screenProps.currentPos.x;
-      const destY = Surface.floor - sprite.height;
-
-      ctx.drawImage(
-        image,
-        spriteSheetX, spriteSheetY, sprite.width, sprite.height,
-        destX, destY, sprite.width, sprite.height,
-      );
-
-      if (gameFrame % Mario._lag === 0) {
-        (Mario._screenProps.currentFrame + 1) === frames.length
-          ? Mario._screenProps.currentFrame = 0
-          : Mario._screenProps.currentFrame++;
-
-        if (destX < 0) Mario._screenProps.currentPos.x = ctx.canvas.width;
-        else Mario._screenProps.currentPos.x = destX - sprite.width;
-      }
-    } else {
-      Mario._direction = 'left';
-      Mario._state.action = 'run-backward';
-      Mario.runBackward(ctx, gameFrame);
-    }
-
-    Mario.locationNotify();
-
-    return {
-      height: sprite.height,
-      pos: { ...Mario._screenProps.currentPos },
-      width: sprite.width,
-    }
-  };
-
-  public static runForward: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
-    const sprite = Mario.getSprite();
-    const { frames, startY } = Mario._spriteMap.forward;
-
-    if (Mario._state.action === 'run-forward') {
-      const spriteSheetX = frames[Mario._screenProps.currentFrame] * sprite.width;
-      const spriteSheetY = startY;
-      const destX = Mario._screenProps.currentPos.x;
-      const destY = Surface.floor - sprite.height;
-
-      ctx.drawImage(
-        image,
-        spriteSheetX, spriteSheetY, sprite.width, sprite.height,
-        destX, destY, sprite.width, sprite.height
-      );
-
-      if (gameFrame % Mario._lag === 0) {
-        (Mario._screenProps.currentFrame + 1) === frames.length
-          ? Mario._screenProps.currentFrame = 0
-          : Mario._screenProps.currentFrame++;
-
-        if (destX > ctx.canvas.width) Mario._screenProps.currentPos.x = 0;
-        else Mario._screenProps.currentPos.x = destX + sprite.width;
-      }
-    } else {
-      Mario._screenProps.currentFrame = 0;
-      Mario._direction = 'right';
-      Mario._state.action = 'run-forward';
-      Mario.runForward(ctx, gameFrame);
-    }
-
-    Mario.locationNotify();
-
-    return {
-      height: sprite.height,
-      pos: { ...Mario._screenProps.currentPos },
-      width: sprite.width,
-    }
-  };
-
-  public static standStill: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
-    const sprite = Mario.getSprite();
-    const { frames, startY } = Mario._spriteMap.still;
-    const facing = {'right': 0, 'left': 1};
-
-    if (Mario._state.action === 'still') {
-      const spriteSheetX = frames[facing[Mario._direction]] * sprite.width;
-      const spriteSheetY = startY;
-      const destX = Mario._screenProps.currentPos.x;
-      const destY = (Surface.floor - sprite.height);
-
-      ctx.drawImage(
-        image,
-        spriteSheetX, spriteSheetY, sprite.width, sprite.height,
-        destX, destY, sprite.width, sprite.height,
-      );
-    } else {
-      // Take one more step if already running backward/forward.
-      if (Mario._state.action === 'run-backward') {
-        Mario._screenProps.currentPos.x -= sprite.width;
-      } else if (Mario._state.action === 'run-forward') {
-        Mario._screenProps.currentPos.x += sprite.width;
-      }
-
-      Mario._screenProps.currentFrame = 0;
-      Mario._state.action = 'still';
-      Mario.standStill(ctx, gameFrame);
-    }
-
-    Mario.locationNotify();
-
-    return {
-      height: sprite.height,
-      pos: { ...Mario._screenProps.currentPos },
-      width: sprite.width,
-    }
-  };
-
-  private static getSprite(): MarioSprite {
+  public static getSprite(): MarioSprite {
     const { action, power } = Mario._state;
 
     const height = (() => {
@@ -204,10 +92,125 @@ export class Mario {
     });
   }
 
+  public static runBackward: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
+    const sprite = Mario.getSprite();
+    const { frames, startY } = Mario._spriteMap.backward;
+
+    if (Mario._state.action === 'run-backward') {
+      const spriteSheetX = frames[Mario._spriteState.currentFrame] * sprite.width;
+      const spriteSheetY = startY;
+      const destX = Mario._spriteState.currentPos.x - sprite.width;
+      const destY = Surface.floor - sprite.height;
+
+      if (gameFrame % Mario._lag === 0) {
+        (Mario._spriteState.currentFrame + 1) === frames.length
+          ? Mario._spriteState.currentFrame = 0
+          : Mario._spriteState.currentFrame++;
+
+        if ((destX + sprite.width) > 0) Mario._spriteState.currentPos.x = destX;
+      }
+
+      ctx.drawImage(
+        image,
+        spriteSheetX, spriteSheetY, sprite.width, sprite.height,
+        Mario._spriteState.currentPos.x, destY, sprite.width, sprite.height,
+      );
+    } else {
+      Mario._direction = 'left';
+      Mario._state.action = 'run-backward';
+      Mario.runBackward(ctx, gameFrame);
+    }
+
+    Mario.locationNotify();
+
+    return {
+      height: sprite.height,
+      pos: { ...Mario._spriteState.currentPos },
+      width: sprite.width,
+    }
+  };
+
+  public static runForward: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
+    const sprite = Mario.getSprite();
+    const { frames, startY } = Mario._spriteMap.forward;
+
+    if (Mario._state.action === 'run-forward') {
+      const spriteSheetX = frames[Mario._spriteState.currentFrame] * sprite.width;
+      const spriteSheetY = startY;
+      const destX = Mario._spriteState.currentPos.x + sprite.width;
+      const destY = Surface.floor - sprite.height;
+
+      if (gameFrame % Mario._lag === 0) {
+        (Mario._spriteState.currentFrame + 1) === frames.length
+          ? Mario._spriteState.currentFrame = 0
+          : Mario._spriteState.currentFrame++;
+
+        if (destX < Surface.playerForwardLimit) Mario._spriteState.currentPos.x = destX;
+      }
+
+      ctx.drawImage(
+        image,
+        spriteSheetX, spriteSheetY, sprite.width, sprite.height,
+        Mario._spriteState.currentPos.x, destY, sprite.width, sprite.height
+      );
+
+    } else {
+      Mario._spriteState.currentFrame = 0;
+      Mario._direction = 'right';
+      Mario._state.action = 'run-forward';
+      Mario.runForward(ctx, gameFrame);
+    }
+
+    Mario.locationNotify();
+
+    return {
+      height: sprite.height,
+      pos: { ...Mario._spriteState.currentPos },
+      width: sprite.width,
+    }
+  };
+
+  public static standStill: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
+    const sprite = Mario.getSprite();
+    const { frames, startY } = Mario._spriteMap.still;
+    const facing = {'right': 0, 'left': 1};
+
+    if (Mario._state.action === 'still') {
+      const spriteSheetX = frames[facing[Mario._direction]] * sprite.width;
+      const spriteSheetY = startY;
+      const destX = Mario._spriteState.currentPos.x;
+      const destY = (Surface.floor - sprite.height);
+
+      ctx.drawImage(
+        image,
+        spriteSheetX, spriteSheetY, sprite.width, sprite.height,
+        destX, destY, sprite.width, sprite.height,
+      );
+    } else {
+      if (Mario._state.action === 'run-backward') {
+        Mario._stopObs.notify();
+      } else if (Mario._state.action === 'run-forward') {
+        Mario._stopObs.notify();
+      }
+
+      Mario._spriteState.currentFrame = 0;
+      Mario._state.action = 'still';
+      Mario.standStill(ctx, gameFrame);
+    }
+
+    Mario.locationNotify();
+
+    return {
+      height: sprite.height,
+      pos: { ...Mario._spriteState.currentPos },
+      width: sprite.width,
+    }
+  };
+
   private static locationNotify() {
-    if (JSON.stringify(Mario._prevScreenProps) !== JSON.stringify(Mario._screenProps)) {
-      Mario._locationObs.notify(Mario._screenProps);
-      Mario._prevScreenProps.copy(Mario._screenProps);
+    if (JSON.stringify(Mario._prevScreenProps) !== JSON.stringify(Mario._spriteState)) {
+      Mario._locationObs.notify(Mario._spriteState);
+      Mario._prevScreenProps.copy(Mario._spriteState);
     }
   }
 }
