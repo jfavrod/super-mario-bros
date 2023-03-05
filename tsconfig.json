@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "AMD",
+    "outFile": "static/js/game.js",
+    "skipLibCheck": true,
+    "rootDir": "src/",
+    "strict": true,
+    "target": "es2016"
+  }
+}
