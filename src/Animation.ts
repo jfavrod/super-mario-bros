@@ -1,5 +1,6 @@
 import { Canvas } from './Canvas';
 import { ISprite } from './ISprite';
+import { Screen } from './Screen';
 
 export type AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => ISprite;
 
@@ -10,6 +11,8 @@ export class Animation {
 
   private static _gameLoop: AnimationFn[] = [];
   private static _keys: string[] = [];
+
+  public static get gameFrame() { return Animation._gameFrame }
 
   public static addAnimation(key: string, animationFn: AnimationFn) {
     if (!Animation._keys.includes(key)) {

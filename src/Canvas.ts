@@ -15,10 +15,9 @@ export class Canvas {
     this._ctx = this._canvas.getContext('2d') as CanvasRenderingContext2D;
   }
 
-  public static getInstance(id?: string, width?: number, height?: number) {
+  public static getInstance() {
     if (Canvas._instance === undefined) {
-      if (!id || !width || !height) throw new Error('id, width, and height required to create a new instance of Canvas');
-      Canvas._instance = new Canvas(id, width, height);
+      Canvas._instance = new Canvas('canvas', 1024, 512);
     }
     return Canvas._instance;
   }

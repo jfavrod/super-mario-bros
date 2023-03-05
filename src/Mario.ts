@@ -1,4 +1,7 @@
 import { AnimationFn } from './Animation';
+import { Observable } from './Observable';
+import { ScreenProperties } from './ScreenProperties';
+import { Surface } from './Surface';
 
 type MarioSprite = {
   height: number;
@@ -16,12 +19,12 @@ const image = new Image();
 image.src = 'img/mario_sheet.png';
 
 export class Mario {
-  private static _currentPos = { x: 0, y: 0 };
-  /** The current animation frame from the sprite sheet. */
-  private static _currentFrame = 0;
   /** Which direction Mario is facing. */
   private static _direction: 'left' | 'right' = 'right';
   private static _lag = 5;
+  private static _locationObs = new Observable<ScreenProperties>();
+  private static _prevScreenProps = new ScreenProperties();
+  private static _screenProps = new ScreenProperties();
 
   private static _spriteMap = {
     backward: {
@@ -43,15 +46,21 @@ export class Mario {
     power: 'sm',
   };
 
+  public static get screenProps(): ScreenProperties { return new ScreenProperties(Mario._screenProps); }
+
+  public static addLocationObserver(obs: (screenProps: ScreenProperties) => unknown) {
+    return Mario._locationObs.addObserver(obs)
+  }
+
   public static runBackward: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
     const sprite = Mario.getSprite();
     const { frames, startY } = Mario._spriteMap.backward;
 
     if (Mario._state.action === 'run-backward') {
-      const spriteSheetX = frames[Mario._currentFrame] * sprite.width;
+      const spriteSheetX = frames[Mario._screenProps.currentFrame] * sprite.width;
       const spriteSheetY = startY;
-      const destX = Mario._currentPos.x - sprite.width;
-      const destY = ctx.canvas.height - sprite.height;
+      const destX = Mario._screenProps.currentPos.x;
+      const destY = Surface.floor - sprite.height;
 
       ctx.drawImage(
         image,
@@ -60,12 +69,12 @@ export class Mario {
       );
 
       if (gameFrame % Mario._lag === 0) {
-        (Mario._currentFrame + 1) === frames.length
-          ? Mario._currentFrame = 0
-          : Mario._currentFrame++;
+        (Mario._screenProps.currentFrame + 1) === frames.length
+          ? Mario._screenProps.currentFrame = 0
+          : Mario._screenProps.currentFrame++;
 
-        if (destX < 0) Mario._currentPos.x = ctx.canvas.width;
-        else Mario._currentPos.x = destX;
+        if (destX < 0) Mario._screenProps.currentPos.x = ctx.canvas.width;
+        else Mario._screenProps.currentPos.x = destX - sprite.width;
       }
     } else {
       Mario._direction = 'left';
@@ -73,9 +82,11 @@ export class Mario {
       Mario.runBackward(ctx, gameFrame);
     }
 
+    Mario.locationNotify();
+
     return {
-      len: sprite.height,
-      pos: { ...Mario._currentPos },
+      height: sprite.height,
+      pos: { ...Mario._screenProps.currentPos },
       width: sprite.width,
     }
   };
@@ -85,10 +96,10 @@ export class Mario {
     const { frames, startY } = Mario._spriteMap.forward;
 
     if (Mario._state.action === 'run-forward') {
-      const spriteSheetX = frames[Mario._currentFrame] * sprite.width;
+      const spriteSheetX = frames[Mario._screenProps.currentFrame] * sprite.width;
       const spriteSheetY = startY;
-      const destX = Mario._currentPos.x + sprite.width;
-      const destY = ctx.canvas.height - sprite.height;
+      const destX = Mario._screenProps.currentPos.x;
+      const destY = Surface.floor - sprite.height;
 
       ctx.drawImage(
         image,
@@ -97,23 +108,25 @@ export class Mario {
       );
 
       if (gameFrame % Mario._lag === 0) {
-        (Mario._currentFrame + 1) === frames.length
-          ? Mario._currentFrame = 0
-          : Mario._currentFrame++;
+        (Mario._screenProps.currentFrame + 1) === frames.length
+          ? Mario._screenProps.currentFrame = 0
+          : Mario._screenProps.currentFrame++;
 
-        if (destX > ctx.canvas.width) Mario._currentPos.x = 0;
-        else Mario._currentPos.x = destX;
+        if (destX > ctx.canvas.width) Mario._screenProps.currentPos.x = 0;
+        else Mario._screenProps.currentPos.x = destX + sprite.width;
       }
     } else {
-      Mario._currentFrame = 0;
+      Mario._screenProps.currentFrame = 0;
       Mario._direction = 'right';
       Mario._state.action = 'run-forward';
       Mario.runForward(ctx, gameFrame);
     }
 
+    Mario.locationNotify();
+
     return {
-      len: sprite.height,
-      pos: { ...Mario._currentPos },
+      height: sprite.height,
+      pos: { ...Mario._screenProps.currentPos },
       width: sprite.width,
     }
   };
@@ -126,8 +139,8 @@ export class Mario {
     if (Mario._state.action === 'still') {
       const spriteSheetX = frames[facing[Mario._direction]] * sprite.width;
       const spriteSheetY = startY;
-      const destX = Mario._currentPos.x;
-      const destY = ctx.canvas.height - sprite.height;
+      const destX = Mario._screenProps.currentPos.x;
+      const destY = (Surface.floor - sprite.height);
 
       ctx.drawImage(
         image,
@@ -137,19 +150,21 @@ export class Mario {
     } else {
       // Take one more step if already running backward/forward.
       if (Mario._state.action === 'run-backward') {
-        Mario._currentPos.x -= sprite.width;
+        Mario._screenProps.currentPos.x -= sprite.width;
       } else if (Mario._state.action === 'run-forward') {
-        Mario._currentPos.x += sprite.width;
+        Mario._screenProps.currentPos.x += sprite.width;
       }
 
-      Mario._currentFrame = 0;
+      Mario._screenProps.currentFrame = 0;
       Mario._state.action = 'still';
       Mario.standStill(ctx, gameFrame);
     }
 
+    Mario.locationNotify();
+
     return {
-      len: sprite.height,
-      pos: { ...Mario._currentPos },
+      height: sprite.height,
+      pos: { ...Mario._screenProps.currentPos },
       width: sprite.width,
     }
   };
@@ -187,5 +202,12 @@ export class Mario {
       startY,
       width,
     });
+  }
+
+  private static locationNotify() {
+    if (JSON.stringify(Mario._prevScreenProps) !== JSON.stringify(Mario._screenProps)) {
+      Mario._locationObs.notify(Mario._screenProps);
+      Mario._prevScreenProps.copy(Mario._screenProps);
+    }
   }
 }

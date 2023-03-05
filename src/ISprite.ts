@@ -1,5 +1,5 @@
 export interface ISprite {
-  len: number;
+  height: number;
   pos: {
     x: number;
     y: number;
