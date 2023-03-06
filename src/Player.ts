@@ -35,6 +35,7 @@ export abstract class Player extends Observable<'move' | 'stop', Position> imple
   protected _screenPos: Position = { x: 0, y: 0 };
   protected _spriteSheetPos: Position = { x: 0, y: 0};
 
+  protected _preSequenceAction: PlayerAction | undefined;
   /** Holds an animation sequence. */
   protected _sequence: CallableFunction[] = [];
 
@@ -62,6 +63,13 @@ export abstract class Player extends Observable<'move' | 'stop', Position> imple
     return this._isRunning;
   }
 
+  public set isRunning(bool: boolean) {
+    if (bool === true) this._frameDelay = 3;
+    else this._frameDelay = 5;
+
+    this._isRunning = bool;
+  }
+
   public get spriteWidth(): number {
     return this._spriteMap[this._action].width;
   }
@@ -82,10 +90,18 @@ export abstract class Player extends Observable<'move' | 'stop', Position> imple
 
       if (this._sequence.length) {
         (this._sequence.shift()!)();
+        if (this._sequence.length === 0) this._action = this._preSequenceAction!;
       }
+
       else if (this._action === 'forward') this.moveForward();
+
       else if (this._action === 'backward') this.moveBackward();
-      else if (this._action === 'jump') this.performJump();
+
+      else if (this._action === 'jump') {
+        this._preSequenceAction = this._prevAction;
+        this.performJump();
+      }
+
       else if (this._action === 'still') this.standStill();
 
       if (this._action === 'still') this.notify('stop', this._screenPos);

@@ -3,7 +3,12 @@ import { Background } from './Background';
 import { Canvas } from './Canvas';
 import { Player, Position } from './Player';
 
-const movement = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'];
+const BACKWARD_KEY = 'ArrowLeft';
+const FORWARD_KEY = 'ArrowRight';
+const JUMP_KEY = 'd';
+const RUN_WALK_KEY = 'a';
+
+const movement = [BACKWARD_KEY, FORWARD_KEY, JUMP_KEY, RUN_WALK_KEY];
 
 /**
  * Observers sprites and 
@@ -30,7 +35,7 @@ export class Screen {
 
   private static playerMovementObserver(pos: Position) {
     if ((pos.x + Screen._player.spriteWidth) > (Screen._canvas.width / 2)) {
-      Screen._stopBg = Animation.addAnimation('advance-bg', () => Background.advance(Screen._player.isRunning), 0);
+      Screen._stopBg = Animation.addAnimation('advance-bg', Background.advance, 0);
     }
   }
 
@@ -42,30 +47,37 @@ export class Screen {
   }
 
   private static initKeyPressHandles() {
-    let currentKey: string = '';
-
     document.addEventListener('keydown', (event) => {
-      currentKey = event.key;
+      const currentKey = event.key;
 
       if (movement.includes(currentKey)) {
-        if (event.key === 'ArrowRight') {
+        if (event.key === FORWARD_KEY) {
           Screen._player.setAction('forward');
-        } else if (event.key === 'ArrowLeft') {
+        } else if (event.key === BACKWARD_KEY) {
           Screen._player.setAction('backward');
-        } else if (event.key === 'ArrowUp') {
+        } else if (event.key === JUMP_KEY) {
           Screen._player.setAction('jump');
+        } else if (currentKey === RUN_WALK_KEY) {
+          Screen._player.isRunning = true;
+          Background.speed = 8;
         }
       } else {
         console.log(currentKey);
       }
     });
 
-    document.addEventListener('keyup', () => {
-      Screen._player.setAction('still');
+    document.addEventListener('keyup', (event) => {
+      const currentKey = event.key;
 
-      if (Screen._stopBg) {
-        Screen._stopBg();
-        Screen._stopBg = undefined;
+      if (currentKey === BACKWARD_KEY || currentKey === FORWARD_KEY) {
+        Screen._player.setAction('still');
+        if (Screen._stopBg) {
+          Screen._stopBg();
+          Screen._stopBg = undefined;
+        }
+      } else if (currentKey === RUN_WALK_KEY) {
+        Screen._player.isRunning = false;
+        Background.speed = 3;
       }
     });
   }

@@ -1,5 +1,4 @@
 import { AnimationFn } from './Animation';
-import { Player } from './Player';
 import { SpriteState } from './SpriteState';
 
 const image = new Image();
@@ -7,6 +6,15 @@ image.src = 'img/bg-1-1.png';
 
 export class Background extends SpriteState {
   private static _screenProps = new SpriteState();
+  private static _speed = 3;
+
+  public static get speed(): number {
+    return Background._speed;
+  }
+
+  public static set speed(spd: number) {
+    Background._speed = spd;
+  }
 
   private static getSprite = () => ({
     height: 480,
@@ -29,7 +37,7 @@ export class Background extends SpriteState {
     );
   }
 
-  public static advance = (isRunning: Player['_isRunning']) => {
-    Background._screenProps.currentFrame += isRunning ? 5 : 3;
+  public static advance = () => {
+    Background._screenProps.currentFrame += Background._speed;
   }
 }
