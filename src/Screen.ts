@@ -28,7 +28,7 @@ export class Screen {
 
   private static playerMovementObserver(pos: Position) {
     if ((pos.x + Screen._player.spriteWidth) > (Screen._canvas.width / 2)) {
-      Screen._stopBg = Animation.addAnimation('advance-bg', Background.advance, 0);
+      Screen._stopBg = Animation.addAnimation('advance-bg', () => Background.advance(Screen._player.isRunning), 0);
     }
   }
 

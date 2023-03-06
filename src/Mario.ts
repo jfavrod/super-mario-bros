@@ -1,6 +1,6 @@
 import { Animation } from './Animation';
 import { SpriteMap, SpriteSheetData } from './ISpriteMap';
-import { Player, PlayerAction, Position } from './Player';
+import { Player, Position } from './Player';
 import { Surface } from './Surface';
 
 const image = new Image();
@@ -85,7 +85,7 @@ export class Mario extends Player {
 
     // Cannot run off screen left.
     if ((this.screenPos.x - width) > (-1 * width)) {
-      this.screenPos.x -= this.isRunning ? this.runSpeed : this.walkSpeed;
+      this.screenPos.x -= this._isRunning ? this.runSpeed : this.walkSpeed;
     }
 
     this.screenPos.y = (Surface.floor - height)
@@ -101,7 +101,7 @@ export class Mario extends Player {
     this.spriteSheetPos.y = startY;
 
     if ((this.screenPos.x + width) < Surface.playerForwardLimit) {
-      this.screenPos.x += this.isRunning ? this.runSpeed : this.walkSpeed;
+      this.screenPos.x += this._isRunning ? this.runSpeed : this.walkSpeed;
     }
 
     this.screenPos.y = (Surface.floor - height)

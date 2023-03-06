@@ -1,4 +1,5 @@
 import { AnimationFn } from './Animation';
+import { Player } from './Player';
 import { SpriteState } from './SpriteState';
 
 const image = new Image();
@@ -28,7 +29,7 @@ export class Background extends SpriteState {
     );
   }
 
-  public static advance: AnimationFn = (ctx: CanvasRenderingContext2D) => {
-    Background._screenProps.currentFrame += 5;
+  public static advance = (isRunning: Player['_isRunning']) => {
+    Background._screenProps.currentFrame += isRunning ? 5 : 3;
   }
 }

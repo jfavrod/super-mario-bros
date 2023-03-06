@@ -19,7 +19,7 @@ export abstract class Player extends Observable<'move' | 'stop', Position> imple
   protected direction: PlayerDirection = 'right';
   /** Game frames to wait before drawing next sprite frame. */
   protected frameDelay = 5;
-  protected isRunning = false;
+  protected _isRunning = false;
   /** Small (sm), Large (lg), or Fire Power (fp). Default `sm` */
   protected power: PlayerPower = 'sm';
 
@@ -37,6 +37,10 @@ export abstract class Player extends Observable<'move' | 'stop', Position> imple
 
   public abstract draw(ctx: CanvasRenderingContext2D): void;
   public abstract update(): Position;
+
+  public get isRunning(): boolean {
+    return this._isRunning;
+  }
 
   public get spriteWidth(): number {
     return this.spriteMap[this.action].width;
