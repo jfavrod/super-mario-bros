@@ -1,8 +1,6 @@
+import { Position } from './Player';
+
 export interface ISprite {
-  height: number;
-  pos: {
-    x: number;
-    y: number;
-  };
-  width: number;
+  draw(ctx: CanvasRenderingContext2D): void;
+  update(): Position;
 }

@@ -12,7 +12,7 @@ export class Background extends SpriteState {
     startY: 0,
   });
 
-  public static init: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
+  public static init: AnimationFn = (ctx: CanvasRenderingContext2D) => {
     const sprite = Background.getSprite();
     let { currentFrame } = Background._screenProps;
 
@@ -26,41 +26,9 @@ export class Background extends SpriteState {
       spriteSheetX, spriteSheetY, ctx.canvas.width, sprite.height,
       destX, destY, ctx.canvas.width, sprite.height 
     );
-
-    return {
-      height: ctx.canvas.height,
-      pos: {
-        x: 0,
-        y: 0,
-      },
-      width: ctx.canvas.width,
-    }
   }
 
-  public static advance: AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => {
-    const sprite = Background.getSprite();
-    let { currentFrame } = Background._screenProps;
-
-    const spriteSheetX = currentFrame;
-    const spriteSheetY = sprite.startY;
-    const destX = 0;
-    const destY = ctx.canvas.height - sprite.height;
-
-    // ctx.drawImage(
-    //   image,
-    //   spriteSheetX, spriteSheetY, ctx.canvas.width, sprite.height,
-    //   destX, destY, ctx.canvas.width, sprite.height 
-    // );
-
+  public static advance: AnimationFn = (ctx: CanvasRenderingContext2D) => {
     Background._screenProps.currentFrame += 5;
-
-    return {
-      height: ctx.canvas.height,
-      pos: {
-        x: 0,
-        y: 0,
-      },
-      width: ctx.canvas.width,
-    }
   }
 }

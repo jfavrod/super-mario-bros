@@ -1,41 +1,37 @@
 import { Animation } from './Animation';
 import { Background } from './Background';
 import { Canvas } from './Canvas';
-import { Mario } from './Mario';
-import { SpriteState } from './SpriteState';
+import { Player, Position } from './Player';
 
 /**
  * Observers sprites and 
  */
 export class Screen {
   private static _canvas = Canvas.getInstance();
-
   private static _initialized = false;
+  private static _player: Player;
 
   private static _stopBg: (() => void) | undefined;
   private static _removeInitBg: (() => void) | undefined;
-  private static _removeRunForward: (() => void) | undefined;
-  private static _removeRunReverse: (() => void) | undefined;
-  private static _removeStandStill: (() => void) | undefined;
 
-  public static init() {
+  public static init(player: Player) {
     if (!Screen._initialized) {
+      Screen._player = player;
       Screen._removeInitBg = Animation.addAnimation('init-bg', Background.init, 0);
 
-      Mario.addLocationObserver(Screen.marioMovementObserver);
-      Mario.addStopObserver(Screen.marioStopObserver);
+      player.addObserver('move', Screen.playerMovementObserver);
+      player.addObserver('stop', Screen.marioStopObserver);
 
       Screen.initKeyPressHandles();
       Screen._initialized = true;
     }
   }
 
-  private static marioMovementObserver(pos: SpriteState) {
-    if ((pos.currentPos.x + (Mario.getSprite().width / 2)) > (Screen._canvas.width / 2)) {
-      // If we're not already stopped and we're moving.
-      if (!Screen._stopBg && Screen._removeRunForward) {
-        Screen._stopBg = Animation.addAnimation('advance-bg', Background.advance, 0);
-      }
+  private static playerMovementObserver(pos: Position) {
+    console.log('move', pos);
+    Screen._removeInitBg!();
+    if ((pos.x + Screen._player.spriteWidth) > (Screen._canvas.width / 2)) {
+      Screen._stopBg = Animation.addAnimation('advance-bg', Background.advance, 0);
     }
   }
 
@@ -53,28 +49,21 @@ export class Screen {
       currentKey = event.key;
 
       if (currentKey === 'ArrowRight' || currentKey === 'ArrowLeft') {
-        Screen._removeStandStill && Screen._removeStandStill();
-        Screen._removeStandStill = undefined;
-
         if (event.key === 'ArrowRight') {
-          Screen._removeRunForward = Animation.addAnimation('running', Mario.runForward);
+          Screen._player.setAction('forward');
         } else if (event.key === 'ArrowLeft') {
-          Screen._removeRunReverse = Animation.addAnimation('running-rev', Mario.runBackward);
+          Screen._player.setAction('backward');
         }
       }
     });
 
     document.addEventListener('keyup', () => {
-      Screen._removeRunForward && Screen._removeRunForward();
-      Screen._removeRunForward = undefined;
+      Screen._player.setAction('still');
 
-      Screen._removeRunReverse && Screen._removeRunReverse();
-      Screen._removeRunReverse = undefined;
-
-      Screen._stopBg && Screen._stopBg();
-      Screen._stopBg = undefined;
-
-      Screen._removeStandStill = Animation.addAnimation('stand-still', Mario.standStill);
+      if (Screen._stopBg) {
+        Screen._stopBg();
+        Screen._stopBg = undefined;
+      }
     });
   }
 }

@@ -1,7 +1,7 @@
 import { Canvas } from './Canvas';
 import { ISprite } from './ISprite';
 
-export type AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => ISprite;
+export type AnimationFn = (ctx: CanvasRenderingContext2D, gameFrame: number) => void;
 
 export class Animation {
   private static _canvas: Canvas;
@@ -10,6 +10,7 @@ export class Animation {
 
   // private static _gameLoop: AnimationFn[] = [];
   private static _keys: string[] = [];
+  private static sprites: ISprite[] = [];
 
   public static _loops = [
     [] as AnimationFn[],
@@ -25,13 +26,16 @@ export class Animation {
     }
 
     return () => {
-      console.log('remove', key);
       const keyIdx = Animation._keys.findIndex((ky) => ky === key)
       const glIdx = Animation._loops[layer || 1].findIndex((anim) => anim === animationFn);
       Animation._keys.splice(keyIdx, 1);
       Animation._loops[layer || 1].splice(glIdx, 1);
     };
   };
+
+  public static addSprite(sprite: ISprite) {
+    Animation.sprites.push(sprite);
+  }
 
   public static animate() {
     if (!Animation._isAnimating) {
@@ -54,8 +58,19 @@ export class Animation {
 
     Animation._loops[0].forEach((anim) => anim(canvas.ctx, Animation._gameFrame));
     Animation._loops[1].forEach((anim) => anim(canvas.ctx, Animation._gameFrame));
+    Animation.sprites.forEach((sprite) => {
+      sprite.update();
+      sprite.draw(canvas.ctx);
+    });
+
+    Animation.spriteCleanUp();
 
     Animation._gameFrame++;
     requestAnimationFrame(Animation._animate);
+  }
+
+  /** Remove sprites that are no longer on the screen. */
+  private static spriteCleanUp() {
+    return;
   }
 }
