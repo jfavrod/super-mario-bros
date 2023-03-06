@@ -19,6 +19,7 @@ export abstract class Player extends Observable<'move' | 'stop', Position> imple
   protected direction: PlayerDirection = 'right';
   /** Game frames to wait before drawing next sprite frame. */
   protected frameDelay = 5;
+  protected isRunning = false;
   /** Small (sm), Large (lg), or Fire Power (fp). Default `sm` */
   protected power: PlayerPower = 'sm';
 
@@ -26,6 +27,9 @@ export abstract class Player extends Observable<'move' | 'stop', Position> imple
   protected prevAction: PlayerAction = 'still';
   /** The previous position of the sprite on the screen. */
   protected prevScreenPos: Position = { x: 0, y: 0 };
+
+  protected runSpeed = 30;
+  protected walkSpeed = 15;
 
   /** The current position of the sprite on the screen. */
   protected screenPos: Position = { x: 0, y: 0 };

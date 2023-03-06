@@ -85,7 +85,7 @@ export class Mario extends Player {
 
     // Cannot run off screen left.
     if ((this.screenPos.x - width) > (-1 * width)) {
-      this.screenPos.x -= width;
+      this.screenPos.x -= this.isRunning ? this.runSpeed : this.walkSpeed;
     }
 
     this.screenPos.y = (Surface.floor - height)
@@ -101,7 +101,7 @@ export class Mario extends Player {
     this.spriteSheetPos.y = startY;
 
     if ((this.screenPos.x + width) < Surface.playerForwardLimit) {
-      this.screenPos.x += width;
+      this.screenPos.x += this.isRunning ? this.runSpeed : this.walkSpeed;
     }
 
     this.screenPos.y = (Surface.floor - height)
