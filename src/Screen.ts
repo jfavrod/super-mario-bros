@@ -12,12 +12,11 @@ export class Screen {
   private static _player: Player;
 
   private static _stopBg: (() => void) | undefined;
-  private static _removeInitBg: (() => void) | undefined;
 
   public static init(player: Player) {
     if (!Screen._initialized) {
       Screen._player = player;
-      Screen._removeInitBg = Animation.addAnimation('init-bg', Background.init, 0);
+      Animation.addAnimation('init-bg', Background.init, 0);
 
       player.addObserver('move', Screen.playerMovementObserver);
       player.addObserver('stop', Screen.marioStopObserver);
@@ -28,8 +27,6 @@ export class Screen {
   }
 
   private static playerMovementObserver(pos: Position) {
-    console.log('move', pos);
-    Screen._removeInitBg!();
     if ((pos.x + Screen._player.spriteWidth) > (Screen._canvas.width / 2)) {
       Screen._stopBg = Animation.addAnimation('advance-bg', Background.advance, 0);
     }
