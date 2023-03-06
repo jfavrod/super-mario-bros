@@ -3,6 +3,8 @@ import { Background } from './Background';
 import { Canvas } from './Canvas';
 import { Player, Position } from './Player';
 
+const movement = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'];
+
 /**
  * Observers sprites and 
  */
@@ -45,12 +47,16 @@ export class Screen {
     document.addEventListener('keydown', (event) => {
       currentKey = event.key;
 
-      if (currentKey === 'ArrowRight' || currentKey === 'ArrowLeft') {
+      if (movement.includes(currentKey)) {
         if (event.key === 'ArrowRight') {
           Screen._player.setAction('forward');
         } else if (event.key === 'ArrowLeft') {
           Screen._player.setAction('backward');
+        } else if (event.key === 'ArrowUp') {
+          Screen._player.setAction('jump');
         }
+      } else {
+        console.log(currentKey);
       }
     });
 
