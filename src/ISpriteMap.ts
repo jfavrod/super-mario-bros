@@ -19,4 +19,4 @@ export type SpriteSheetData = {
   width: number;
 };
 
-export type SpriteMap = Record<PlayerAction, SpriteSheetData>;
+export type PlayerSpriteMap = Record<PlayerAction, SpriteSheetData>;

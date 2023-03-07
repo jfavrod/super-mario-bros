@@ -1,16 +1,16 @@
 import { ISprite } from './ISprite';
-import { SpriteMap } from './ISpriteMap';
+import { PlayerSpriteMap } from './ISpriteMap';
 import { Observable } from './Observable';
 import { Surface } from './Surface';
 
-export type PlayerAction = 'still' | 'forward' | 'backward' | 'jump' | 'crouch';
+export type PlayerAction = 'still' | 'forward' | 'backward' | 'jump' | 'crouch' | 'skid';
 export type PlayerDirection = 'left' | 'right';
 export type PlayerPower = 'sm' | 'lg' | 'fp';
 export type Position = { x: number; y: number; };
 
 export abstract class Player extends Observable<'move' | 'stop', Position> implements ISprite {
   /** Map PlayerActions to the sprite sheet. */
-  protected abstract _spriteMap: SpriteMap;
+  protected abstract _spriteMap: PlayerSpriteMap;
 
   /** The current action of the player. Default `still` */
   protected _action: PlayerAction = 'still';

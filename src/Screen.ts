@@ -53,11 +53,14 @@ export class Screen {
       if (movement.includes(currentKey)) {
         if (event.key === FORWARD_KEY) {
           Screen._player.setAction('forward');
-        } else if (event.key === BACKWARD_KEY) {
+        }
+        else if (event.key === BACKWARD_KEY) {
           Screen._player.setAction('backward');
-        } else if (event.key === JUMP_KEY) {
+        }
+        else if (event.key === JUMP_KEY) {
           Screen._player.setAction('jump');
-        } else if (currentKey === RUN_WALK_KEY) {
+        }
+        else if (currentKey === RUN_WALK_KEY) {
           Screen._player.isRunning = true;
           Background.speed = 8;
         }
