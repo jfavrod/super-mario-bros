@@ -154,21 +154,57 @@ export abstract class Player extends Observable<'move' | 'stop', Position> imple
   };
 
   private performJump = () => {
-    const { height, startX, startY } = this._spriteMap[this._action];
+    const { height, startX, startY, width } = this._spriteMap[this._action];
     // Help player get to the min jump height;
     const boost = this._power === 'sm' ? 12 : 0;
 
-    const x = [((-0.5 * height) - boost), ((-1 * height) - boost), ((-0.5 * height) - boost), 0]
+    let movements = [
+      { y: ((-0.5 * height) - boost), x: 0 },
+      { y: ((-1 * height) - boost), x: 0 },
+      { y: ((-0.5 * height) - boost), x: 0 },
+      { y: 0, x: 0 }
+    ];
 
-    for (let i = 0; i < 4; i++) {
+
+    if (this._isRunning) {
+      movements = [];
+      const maxHeight = -125;
+      const maxDistance = 150;
+
+      let arc = Math.PI;
+      let distance = 0;
+
+      let decY = arc/10;
+
+      let i = 11
+
+      while (i > 0) {
+        distance += maxDistance/10;
+
+        const step = {x: 0, y: 0};
+        step.y = maxHeight * Math.sin(arc)
+        step.x = distance;
+
+        movements.push(step);
+        arc -= decY;
+        i--;
+      }
+    }
+
+    this._sequence.push(() => this._frameDelay = 3);
+    for (let i = 0; i < movements.length; i++) {
+      const initX = this._screenPos.x;
+      const initY = this._screenPos.y;
       this._sequence.push(() => {
 
         this._spriteSheetPos.x = startX;
         this._spriteSheetPos.y = startY;
 
-        this._screenPos.y = (Surface.floor - height) + x[i];
+        this._screenPos.x = initX + movements[i].x;
+        this._screenPos.y = initY + movements[i].y;
       });
     }
+    this._sequence.push(() => this._frameDelay = 5);
   };
 
   private standStill = () => {
